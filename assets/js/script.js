@@ -118,15 +118,15 @@
   }
 
   /* ---------------------------------------------------------------
-   * Contact form — submits to a Google Sheet via Apps Script Web App.
-   * Falls back to a mailto link if the request fails.
+   * Contact form — lightweight client-side handling.
+   * No backend is wired up, so we validate, confirm, and hand the
+   * message off to the visitor's mail client as a safe fallback.
    * ------------------------------------------------------------- */
   const form = document.getElementById('contactForm');
   const status = document.getElementById('formStatus');
-  const SHEET_ENDPOINT = 'https://script.google.com/macros/s/AKfycbykJudhwPJDixfIzUK7RE9USuLkPRf9Eh0f6S-jL3E5SWa1mCExPXSb4qUUQBgl3FKtEg/exec';
 
   if (form && status) {
-    form.addEventListener('submit', async (event) => {
+    form.addEventListener('submit', (event) => {
       event.preventDefault();
 
       const name = form.name.value.trim();
@@ -138,28 +138,12 @@
         return;
       }
 
-      const submitBtn = form.querySelector('button[type="submit"]');
-      submitBtn.disabled = true;
-      status.textContent = 'Sending your message…';
+      const subject = encodeURIComponent(`Portfolio enquiry from ${name}`);
+      const body = encodeURIComponent(`${message}\n\n— ${name} (${email})`);
+      window.location.href = `mailto:abhi.banerjee0044@gmail.com?subject=${subject}&body=${body}`;
 
-      try {
-        await fetch(SHEET_ENDPOINT, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ name, email, message }),
-        });
-        status.textContent = 'Thank you — your message has been sent. I will get back to you shortly.';
-        form.reset();
-      } catch (error) {
-        const subject = encodeURIComponent(`Portfolio enquiry from ${name}`);
-        const body = encodeURIComponent(`${message}\n\n— ${name} (${email})`);
-        window.location.href = `mailto:abhi.banerjee0044@gmail.com?subject=${subject}&body=${body}`;
-        status.textContent = 'Opening your email client to send this message — thank you for reaching out.';
-        form.reset();
-      } finally {
-        submitBtn.disabled = false;
-      }
+      status.textContent = 'Opening your email client to send this message — thank you for reaching out.';
+      form.reset();
     });
   }
 
